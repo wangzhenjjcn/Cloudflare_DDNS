@@ -1,7 +1,7 @@
 # Cloudflare_DDNS
 DDNS for cloudflare
 
-##See branch windowsx64
+##  See branch windowsx64
 
 ##  **Usage**
 
