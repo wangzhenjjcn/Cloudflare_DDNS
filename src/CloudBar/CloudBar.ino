@@ -11,8 +11,8 @@
  
 
 #ifndef STASSID
-#define STASSID "WIFISSID HERE"
-#define STAPSK  "WIFI PASSWORD HERE"
+#define STASSID ""
+#define STAPSK  ""
 #endif
 
 long unsigned int  lastrefreshtime = 0;
@@ -24,14 +24,14 @@ const int wifiPin = 0;
 const int netPin = 2;
 
 
-String CFKEY = "CloudFlareAPIkey";
-String CFUSER = "CloudFlareUserNameEmail";
-String CFZONE_NAME = "DomainName";
-String CFRECORD_NAME = "DDNSDomainName";
-String CFRECORD_TYPE = "A";//A-AAAA
+String CFKEY = " ";
+String CFUSER = "";
+String CFZONE_NAME = "";
+String CFRECORD_NAME = "";
+String CFRECORD_TYPE = "A";
 String CFZONE_ID = "";
 String CFRECORD_ID = "";
-String CFTTL = "120";//120 default
+String CFTTL = "120";
 String FORCE = "false";
 String wanip = "0.0.0.0";
 String cloudip = "0.0.0.0";
@@ -95,8 +95,8 @@ void checkCFZONEID() {
   if (https.begin(*client, url)) {  // HTTPS
     Serial.println("[HTTPS] checkCFZONEID GET https://api.cloudflare.com/client/v4/zones?name=" + CFZONE_NAME + "...\n");
     https.addHeader("Content-Type", "application/json");
-    https.addHeader("X-Auth-Email", "wangzhenjjcn@gmail.com");
-    https.addHeader("X-Auth-Key", "875c2d32aa3dd7fc47f897f4a2a87f03a0edd");
+    https.addHeader("X-Auth-Email", CFUSER);
+    https.addHeader("X-Auth-Key", CFKEY);
     int httpCode = https.GET();
     if (httpCode > 0) {
       Serial.printf("[HTTPS] checkCFZONEID GET... code: %d\n", httpCode);
@@ -288,39 +288,42 @@ void updateDNStoWanIP() {
       Serial.printf("[HTTPS] CFRECORDID GET... code: %d\n", httpCode);
       if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
         String payload = https.getString();
-        Serial.println(" data success -=-=-=-=-=-=-=-= ");
-        Serial.println(payload);
-        Serial.println(" data success -=-=-=-=-=-=-=-= ");
+
+        // Serial.println(" data success -=-=-=-=-=-=-=-= ");
+        // Serial.println(payload);
+        // Serial.println(" data success -=-=-=-=-=-=-=-= ");
         // String jsonDataString;
-        // jsonDataString = payload;
-        // JSONVar jsonData = JSON.parse(jsonDataString);
-        // if (JSON.typeof(jsonData) == "undefined") {
-        //   Serial.println("Parsing input failed!");
-        //   return;
-        // }
-        // JSONVar keys = jsonData.keys();
+        jsonDataString = payload;
+        JSONVar jsonData = JSON.parse(jsonDataString);
+        if (JSON.typeof(jsonData) == "undefined") {
+          Serial.println("Parsing input failed!");
+          return;
+        }
+        JSONVar keys = jsonData.keys();
         // int dataResult=-1;
-        // bool dataSuccess=false;
+        bool dataSuccess=false;
         // String dataValue="";
-        // for (int i = 0; i < keys.length(); i++) {
-        //   JSONVar value = jsonData[keys[i]];
-        //   JSONVar dataKey=keys[i];
+        for (int i = 0; i < keys.length(); i++) {
+          JSONVar value = jsonData[keys[i]];
+          JSONVar dataKey=keys[i];
     
-        //   JSONVar resultStr="result";
-        //   if (dataKey==resultStr){
-        //     dataResult=i;
-        //   }
-        //   JSONVar successKeyStr="success";
-        //   JSONVar successValueStr=true;
-        //   if (dataKey==successKeyStr){
-        //     dataSuccess=(value==successValueStr);
-        //   }
-        //   Serial.print(keys[i]);
-        //   Serial.print(" = ");
-        //   Serial.println(value);
+          JSONVar resultStr="result";
+          if (dataKey==resultStr){
+            dataResult=i;
+          }
+          JSONVar successKeyStr="success";
+          JSONVar successValueStr=true;
+          if (dataKey==successKeyStr){
+            dataSuccess=(value==successValueStr);
+          }
+          // Serial.print(keys[i]);
+          // Serial.print(" = ");
+          // Serial.println(value);
       
-        // }
-        // if (dataSuccess){
+        }
+        if (dataSuccess){
+          Serial.println(" CloudFlare DNS UPDATE SUCCESS !");
+          Serial.println(" CloudFlare DNS UPDATE SUCCESS !");
         // Serial.println(" data success -=-=-=-=-=-=-=-= ");
         // String result=JSON.stringify(jsonData);
         // String id=JSON.stringify(jsonData["result"][0]["id"]);
@@ -333,7 +336,7 @@ void updateDNStoWanIP() {
         // String modified_on=JSON.stringify(jsonData["result"][0]["modified_on"]);
         // Serial.println(" data success -=-=-=-=-=-=-=-= ");
         
-        // }
+        }
  
 
       }else{
@@ -386,15 +389,11 @@ void refreshWanIP() {
       lastrefreshtime = millis();
       WiFiClient client;
       HTTPClient http;
-      if (http.begin(client, "http://ipv4.icanhazip.com")) {  // HTTP
+      if (http.begin(client, "http://ipv4.icanhazip.com")) { 
         Serial.println("[HTTP]GET["+IPCheckAddress+"]...\n");
-        // start connection and send HTTP header
         int httpCode = http.GET();
-        // httpCode will be negative on error
         if (httpCode > 0) {
-          // HTTP header has been send and Server response header has been handled
-          Serial.printf("[HTTP] GET... code: %d\n", httpCode);
-          // file found at server
+          Serial.println("[HTTP] GET... code:"+httpCode.c_str()+"\n");
           if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
             String payload = http.getString();
             String lastwanip = payload;
@@ -404,10 +403,10 @@ void refreshWanIP() {
             lastwanip.replace(" ", "");
             Serial.println(lastwanip);
             if (wanip == lastwanip and wanip==cloudip) {
-              Serial.printf("cache:[%s] now:[%s] ignore...\n", wanip.c_str(), lastwanip.c_str());
+              Serial.println("cache:["+wanip+"] now:["+lastwanip+"] cloud:["+cloudip+"] ignore...\n");
               setCloudflareDNS();
             } else {
-              Serial.printf("cache:[%s] now:[%s] waiting update...\n", wanip.c_str(), lastwanip.c_str());
+              Serial.println("cache:["+wanip+"] now:["+lastwanip+"] cloud:["+cloudip+"]  waiting update...\n");
               wanip = lastwanip;
               wanip.replace("\n", "");
               wanip.replace("\t", "");
