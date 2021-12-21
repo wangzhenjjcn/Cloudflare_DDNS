@@ -1,0 +1,9 @@
+{
+  "cpu": {
+    "fqbn": "esp8266:esp8266:generic:CrystalFreq=26,FlashFreq=40,FlashMode=dout,ResetMethod=ck,baud=115200,dbg=Disabled,eesz=512K,exception=disabled,ip=lm2f,led=2,lvl=None____,vt=flash,wipe=none,xtal=160",
+    "name": "Generic ESP8266 Module",
+    "type": "serial"
+  },
+  "secrets": [],
+  "included_libs": []
+}
